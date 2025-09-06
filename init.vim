@@ -792,12 +792,18 @@ augroup MarkdownHighlights
   autocmd!
   " Apply after VimEnter to override any plugin settings
   autocmd VimEnter * call SetMarkdownHighlights()
-  " Reapply when entering markdown files
-  autocmd BufEnter *.md call SetMarkdownHighlights()
+  " Reapply when entering markdown files with delay to override plugins
+  autocmd BufEnter *.md call timer_start(50, {-> execute('call SetMarkdownHighlights()')})
+  autocmd BufRead *.md call timer_start(50, {-> execute('call SetMarkdownHighlights()')})
+  autocmd BufNewFile *.md call timer_start(50, {-> execute('call SetMarkdownHighlights()')})
   " Reapply after sourcing vimrc
   autocmd SourcePost * call SetMarkdownHighlights()
-  " Apply after any filetype change
-  autocmd FileType markdown call SetMarkdownHighlights()
+  " Apply after any filetype change with delay
+  autocmd FileType markdown call timer_start(100, {-> execute('call SetMarkdownHighlights()')})
+  " Apply after syntax is set
+  autocmd Syntax markdown call timer_start(100, {-> execute('call SetMarkdownHighlights()')})
+  " Apply after buffer is fully loaded
+  autocmd BufWinEnter *.md call timer_start(150, {-> execute('call SetMarkdownHighlights()')})
 augroup END
 
 " Force Treesitter highlighting for markdown
@@ -806,7 +812,11 @@ augroup TreesitterMarkdown
   autocmd FileType markdown TSBufEnable highlight
   autocmd BufRead *.md TSBufEnable highlight
   autocmd BufNewFile *.md TSBufEnable highlight
+  " Ensure Treesitter loads before our highlights
+  autocmd FileType markdown call timer_start(50, {-> execute('TSBufEnable highlight')})
 augroup END
 
-" Delayed application to ensure it overrides everything
+" Multiple delayed applications to ensure it overrides everything
 autocmd VimEnter * call timer_start(100, {-> execute('call SetMarkdownHighlights()')})
+autocmd VimEnter * call timer_start(200, {-> execute('call SetMarkdownHighlights()')})
+autocmd VimEnter * call timer_start(500, {-> execute('call SetMarkdownHighlights()')})
