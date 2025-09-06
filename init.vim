@@ -18,6 +18,8 @@ Plug 'tpope/vim-fugitive'                    " Git integration
 Plug 'airblade/vim-gitgutter'                " Git diff markers
 Plug 'scrooloose/nerdcommenter'              " Easy commenting
 Plug 'jiangmiao/auto-pairs'                  " Auto close brackets
+Plug 'coder/claudecode.nvim'                 " Claude Code in Neovim
+Plug 'folke/snacks.nvim'                     " Required for claudecode.nvim
 
 " Light colorschemes
 Plug 'morhetz/gruvbox'                       " Popular color scheme
@@ -27,8 +29,13 @@ Plug 'catppuccin/nvim', { 'as': 'catppuccin' } " Modern theme with light variant
 
 call plug#end()
 
+" Auto-install missing plugins on startup
+autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+  \| PlugInstall --sync | source $MYVIMRC
+\| endif
+
 " Leader key
-let mapleader = ","             " Set comma as leader key
+let mapleader = " "             " Set space as leader key
 
 " Basic settings
 set number                      " Show line numbers
@@ -332,6 +339,27 @@ nnoremap <leader>cd :set background=dark<CR>:colorscheme gruvbox<CR>
 " Reload config
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<CR>:echo "Config reloaded"<CR>
 
+" ClaudeCode keybindings
+nnoremap <leader>ac :ClaudeCode<CR>
+nnoremap <leader>af :ClaudeCodeFocus<CR>
+nnoremap <leader>ar :ClaudeCode --resume<CR>
+nnoremap <leader>aC :ClaudeCode --continue<CR>
+nnoremap <leader>am :ClaudeCodeSelectModel<CR>
+nnoremap <leader>ab :ClaudeCodeAdd %<CR>
+vnoremap <leader>as :ClaudeCodeSend<CR>
+nnoremap <leader>aa :ClaudeCodeDiffAccept<CR>
+nnoremap <leader>ad :ClaudeCodeDiffDeny<CR>
+
+" Terminal mode window navigation
+tnoremap <C-w>h <C-\><C-n><C-w>h
+tnoremap <C-w>l <C-\><C-n><C-w>l
+tnoremap <C-h> <C-\><C-n><C-w>h
+
+" Double Ctrl-c to switch to Claude from editor
+nnoremap <C-c><C-c> <cmd>wincmd l<CR>
+inoremap <C-c><C-c> <Esc><cmd>wincmd l<CR>
+
+
 
 " Lua configuration
 lua << EOF
@@ -415,4 +443,61 @@ if tree_ok then
     },
   })
 end
+
+-- ClaudeCode configuration
+local claudecode_ok, claudecode = pcall(require, "claudecode")
+if claudecode_ok then
+  claudecode.setup({
+    -- Use local installation if available, otherwise global
+    terminal_cmd = vim.fn.filereadable(vim.fn.expand("~/.claude/local/claude")) == 1 
+      and "~/.claude/local/claude" 
+      or "claude",
+    terminal = {
+      snacks_win_opts = {
+        position = "right",
+        width = 0.5,
+        keys = {
+          -- Override q to not close but switch instead
+          q = {
+            "q",
+            function()
+              vim.cmd("wincmd h")  -- Switch to editor instead of closing
+            end,
+            mode = "n",
+            desc = "Switch to editor",
+          },
+          -- Press Ctrl-c in normal mode to switch to editor  
+          claude_ctrlc = {
+            "<C-c>",
+            function()
+              vim.cmd("wincmd h")  -- Just switch to left window
+            end,
+            mode = "n",
+            desc = "Switch to editor",
+          },
+          -- Handle double Ctrl-c to not kill the terminal
+          claude_ctrlc_double = {
+            "<C-c><C-c>",
+            function()
+              vim.cmd("wincmd h")  -- Just switch to left window
+            end,
+            mode = "n",
+            desc = "Switch to editor",
+          },
+          -- Also handle in terminal mode
+          claude_ctrlc_term = {
+            "<C-c><C-c>",
+            function()
+              vim.cmd("stopinsert")  -- Exit terminal mode
+              vim.cmd("wincmd h")    -- Switch to editor
+            end,
+            mode = "t",
+            desc = "Switch to editor",
+          },
+        },
+      },
+    },
+  })
+end
+
 EOF
