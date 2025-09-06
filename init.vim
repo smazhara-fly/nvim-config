@@ -74,13 +74,16 @@ set foldnestmax=10              " Maximum fold nesting
 " Color scheme configuration
 set background=light
 " Try multiple light themes in order of preference
-silent! colorscheme PaperColor
-if !exists('g:colors_name') || g:colors_name != 'PaperColor'
-  silent! colorscheme everforest
-  if !exists('g:colors_name') || g:colors_name != 'everforest'
-    silent! colorscheme catppuccin-latte
-    if !exists('g:colors_name') || g:colors_name != 'catppuccin-latte'
-      silent! colorscheme gruvbox
+silent! colorscheme github_light
+if !exists('g:colors_name') || g:colors_name != 'github_light'
+  silent! colorscheme PaperColor
+  if !exists('g:colors_name') || g:colors_name != 'PaperColor'
+    silent! colorscheme everforest
+    if !exists('g:colors_name') || g:colors_name != 'everforest'
+      silent! colorscheme catppuccin-latte
+      if !exists('g:colors_name') || g:colors_name != 'catppuccin-latte'
+        silent! colorscheme gruvbox
+      endif
     endif
   endif
 endif
