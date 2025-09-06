@@ -370,10 +370,10 @@ nnoremap <leader>cd3 :set background=dark<CR>:colorscheme catppuccin-mocha<CR>
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<CR>:echo "Config reloaded"<CR>
 
 " ClaudeCode keybindings
-nnoremap <leader>ac :ClaudeCode<CR>
+nnoremap <leader>ac :ClaudeCode --dangerously-skip-permissions<CR>
 nnoremap <leader>af :ClaudeCodeFocus<CR>
-nnoremap <leader>ar :ClaudeCode --resume<CR>
-nnoremap <leader>aC :ClaudeCode --continue<CR>
+nnoremap <leader>ar :ClaudeCode --dangerously-skip-permissions --resume<CR>
+nnoremap <leader>aC :ClaudeCode --dangerously-skip-permissions --continue<CR>
 nnoremap <leader>am :ClaudeCodeSelectModel<CR>
 nnoremap <leader>ab :ClaudeCodeAdd %<CR>
 vnoremap <leader>as :ClaudeCodeSend<CR>
@@ -505,8 +505,8 @@ if claudecode_ok then
   claudecode.setup({
     -- Use local installation if available, otherwise global
     terminal_cmd = vim.fn.filereadable(vim.fn.expand("~/.claude/local/claude")) == 1 
-      and "~/.claude/local/claude" 
-      or "claude",
+      and "~/.claude/local/claude --dangerously-skip-permissions" 
+      or "claude --dangerously-skip-permissions",
     terminal = {
       snacks_win_opts = {
         position = "right",
