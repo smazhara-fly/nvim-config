@@ -28,9 +28,11 @@ Plug 'sainnhe/everforest'                    " Comfortable green theme
 Plug 'catppuccin/nvim', { 'as': 'catppuccin' } " Modern theme with light variant
 
 " Additional vibrant colorschemes for better Rust highlighting
-Plug 'folke/tokyonight.nvim'                 " Popular dark theme with great Rust support
-Plug 'rebelot/kanagawa.nvim'                 " Inspired by Gruvbox but more vibrant
-Plug 'EdenEast/nightfox.nvim'                " Multiple themes with TreeSitter support
+Plug 'folke/tokyonight.nvim'                 " Has excellent light variants too
+Plug 'rebelot/kanagawa.nvim'                 " Has a beautiful light variant (lotus)
+Plug 'EdenEast/nightfox.nvim'                " Includes dayfox and dawnfox light themes
+Plug 'rose-pine/neovim', { 'as': 'rose-pine' } " Beautiful light variant (dawn)
+Plug 'projekt0n/github-nvim-theme'           " GitHub's official light theme
 
 call plug#end()
 
@@ -102,6 +104,11 @@ let g:everforest_enable_italic = 1
 " Rust specific settings
 let g:rustfmt_autosave = 1                   " Format on save
 let g:rust_clip_command = 'xclip -selection clipboard'
+
+" Enhanced semantic highlighting for Rust
+let g:rust_keep_autopairs_default = 1
+let g:rust_recommended_style = 1
+let g:rust_fold = 1
 
 " ALE Configuration 
 let g:ale_linters = {
@@ -342,12 +349,19 @@ nnoremap <leader>c3 :set background=light<CR>:colorscheme catppuccin-latte<CR>
 nnoremap <leader>c4 :set background=light<CR>:colorscheme gruvbox<CR>
 nnoremap <leader>cd :set background=dark<CR>:colorscheme gruvbox<CR>
 
-" Vibrant dark themes for better Rust syntax highlighting
-nnoremap <leader>ct :set background=dark<CR>:colorscheme tokyonight-storm<CR>
-nnoremap <leader>cn :set background=dark<CR>:colorscheme tokyonight-night<CR>
-nnoremap <leader>ck :set background=dark<CR>:colorscheme kanagawa<CR>
-nnoremap <leader>cf :set background=dark<CR>:colorscheme nightfox<CR>
-nnoremap <leader>cc :set background=dark<CR>:colorscheme catppuccin-mocha<CR>
+" Vibrant light themes for better Rust syntax highlighting
+nnoremap <leader>cl1 :set background=light<CR>:colorscheme tokyonight-day<CR>
+nnoremap <leader>cl2 :set background=light<CR>:colorscheme kanagawa-lotus<CR>
+nnoremap <leader>cl3 :set background=light<CR>:colorscheme dayfox<CR>
+nnoremap <leader>cl4 :set background=light<CR>:colorscheme dawnfox<CR>
+nnoremap <leader>cl5 :set background=light<CR>:colorscheme rose-pine-dawn<CR>
+nnoremap <leader>cl6 :set background=light<CR>:colorscheme github_light<CR>
+nnoremap <leader>cl7 :set background=light<CR>:colorscheme github_light_high_contrast<CR>
+
+" Dark themes (if you want to try them)
+nnoremap <leader>cd1 :set background=dark<CR>:colorscheme tokyonight-storm<CR>
+nnoremap <leader>cd2 :set background=dark<CR>:colorscheme kanagawa-wave<CR>
+nnoremap <leader>cd3 :set background=dark<CR>:colorscheme catppuccin-mocha<CR>
 
 " Reload config
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<CR>:echo "Config reloaded"<CR>
