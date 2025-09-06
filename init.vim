@@ -368,10 +368,13 @@ nnoremap <space>zM zM  " Close all folds
 " Markdown specific settings
 augroup markdown_settings
   autocmd!
-  autocmd FileType markdown setlocal conceallevel=0  " Don't hide markdown syntax
+  autocmd FileType markdown setlocal conceallevel=0  " Don't hide markdown syntax (important for tables)
   autocmd FileType markdown setlocal wrap            " Wrap lines
   autocmd FileType markdown setlocal linebreak       " Break at word boundaries
-  autocmd FileType markdown setlocal textwidth=80    " Wrap at 80 characters
+  autocmd FileType markdown setlocal textwidth=0     " Don't auto-wrap (interferes with tables)
+  autocmd FileType markdown setlocal expandtab       " Use spaces for alignment
+  autocmd FileType markdown setlocal tabstop=4       " Tab width
+  autocmd FileType markdown setlocal shiftwidth=4    " Indent width
   " Use markdown folding for markdown files
   autocmd FileType markdown setlocal foldmethod=expr
   autocmd FileType markdown setlocal foldexpr=MarkdownFold()
@@ -643,9 +646,7 @@ let g:vim_markdown_toc_autofit = 1
 let g:vim_markdown_emphasis_multiline = 1
 let g:vim_markdown_fenced_languages = ['python=python', 'js=javascript', 'rust=rust', 'bash=sh']
 
-" Set conceallevel for markdown files
-autocmd FileType markdown setlocal conceallevel=2
-autocmd FileType markdown setlocal concealcursor=nc
+" Set conceallevel for markdown files - removed, handled in markdown_settings augroup
 
 " Treesitter configuration for syntax highlighting
 lua << END
@@ -690,9 +691,9 @@ vim.api.nvim_create_autocmd("FileType", {
       vim.cmd("call SetMarkdownHighlights()")
     end, 100)
     
-    -- Ensure conceallevel is set for clean display
-    vim.opt_local.conceallevel = 2
-    vim.opt_local.concealcursor = "nc"
+    -- Ensure conceallevel is set for clean display (0 for tables)
+    vim.opt_local.conceallevel = 0
+    vim.opt_local.concealcursor = ""
   end,
 })
 END
@@ -701,11 +702,36 @@ END
 
 " Table mode configuration
 let g:table_mode_corner='|'
-let g:table_mode_border=0
+let g:table_mode_corner_corner='|'
+let g:table_mode_header_fillchar='='
 let g:table_mode_fillchar=' '
+let g:table_mode_map_prefix = '<leader>t'
+let g:table_mode_toggle_map = 'm'
+let g:table_mode_always_active = 0
+let g:table_mode_delimiter = ' '
+let g:table_mode_align_char = '|'
+let g:table_mode_syntax = 1
+let g:table_mode_auto_align = 1
+let g:table_mode_update_time = 500
 
-" Enable table mode for markdown
-autocmd FileType markdown TableModeEnable
+" Table mode keybindings
+nnoremap <leader>tm :TableModeToggle<CR>
+nnoremap <leader>tr :TableModeRealign<CR>
+nnoremap <leader>tt :Tableize<CR>
+vnoremap <leader>tt :Tableize<CR>
+nnoremap <leader>tdd :TableModeRealign<CR>
+nnoremap <leader>tdc :TableModeRealign<CR>
+nnoremap <leader>tic :TableAddColumn<CR>
+nnoremap <leader>tdc :TableDeleteColumn<CR>
+
+" Enable table mode for markdown files automatically
+augroup TableModeActivation
+  autocmd!
+  autocmd FileType markdown :silent! TableModeEnable
+  autocmd BufEnter *.md :silent! TableModeEnable
+  autocmd BufRead *.md :silent! TableModeEnable
+  autocmd BufNewFile *.md :silent! TableModeEnable
+augroup END
 
 " Better highlighting with your colorscheme
 function! SetMarkdownHighlights()
