@@ -21,6 +21,10 @@ Plug 'jiangmiao/auto-pairs'                  " Auto close brackets
 Plug 'coder/claudecode.nvim'                 " Claude Code in Neovim
 Plug 'folke/snacks.nvim'                     " Required for claudecode.nvim
 
+" Markdown plugins
+Plug 'preservim/vim-markdown'                " Markdown folding and syntax
+Plug 'sbdchd/neoformat'                      " Formatting tool for prettier
+
 " Light colorschemes
 Plug 'morhetz/gruvbox'                       " Popular color scheme
 Plug 'NLKNguyen/papercolor-theme'            " Clean light theme
@@ -34,6 +38,9 @@ Plug 'EdenEast/nightfox.nvim'                " Includes dayfox and dawnfox light
 Plug 'rose-pine/neovim', { 'as': 'rose-pine' } " Beautiful light variant (dawn)
 Plug 'projekt0n/github-nvim-theme'           " GitHub's official light theme
 
+" Table formatting and alignment
+Plug 'dhruvasagar/vim-table-mode'            " Better table support
+Plug 'gabrielelana/vim-markdown'             " Alternative markdown with better rendering
 call plug#end()
 
 " Auto-install missing plugins on startup
@@ -70,6 +77,7 @@ set foldmethod=expr
 set foldexpr=nvim_treesitter#foldexpr()
 set foldlevelstart=99           " Start with all folds open
 set foldnestmax=10              " Maximum fold nesting
+set foldenable                  " Enable folding
 
 " Color scheme configuration
 set background=light
@@ -345,6 +353,73 @@ command! RgInteractive lua vim.ui.input({prompt = 'Search: '}, function(input) i
 command! -nargs=1 Tgrep lua require('telescope.builtin').grep_string({search = <q-args>})
 nnoremap <leader>gs :Tgrep<Space>
 
+" Folding keybindings
+nnoremap <space>za za  " Toggle fold under cursor
+nnoremap <space>zA zA  " Toggle all folds recursively under cursor
+nnoremap <space>zc zc  " Close fold under cursor
+nnoremap <space>zo zo  " Open fold under cursor
+nnoremap <space>zC zC  " Close all folds recursively under cursor
+nnoremap <space>zO zO  " Open all folds recursively under cursor
+nnoremap <space>zr zr  " Reduce folding level by one
+nnoremap <space>zR zR  " Open all folds
+nnoremap <space>zm zm  " Increase folding level by one
+nnoremap <space>zM zM  " Close all folds
+
+" Markdown specific settings
+augroup markdown_settings
+  autocmd!
+  autocmd FileType markdown setlocal conceallevel=0  " Don't hide markdown syntax
+  autocmd FileType markdown setlocal wrap            " Wrap lines
+  autocmd FileType markdown setlocal linebreak       " Break at word boundaries
+  autocmd FileType markdown setlocal textwidth=80    " Wrap at 80 characters
+  " Use markdown folding for markdown files
+  autocmd FileType markdown setlocal foldmethod=expr
+  autocmd FileType markdown setlocal foldexpr=MarkdownFold()
+augroup END
+
+" Markdown folding expression
+function! MarkdownFold()
+  let line = getline(v:lnum)
+  
+  " Headers create folds
+  if line =~ '^#\+ '
+    return '>' . (len(matchstr(line, '^#\+')) - 1)
+  endif
+  
+  " Code blocks
+  if line =~ '^```'
+    if b:markdown_in_code_block
+      let b:markdown_in_code_block = 0
+      return '<1'
+    else
+      let b:markdown_in_code_block = 1
+      return '>1'
+    endif
+  endif
+  
+  return '='
+endfunction
+
+" Initialize markdown code block tracking
+autocmd BufEnter *.md let b:markdown_in_code_block = 0
+
+" Neoformat configuration for markdown
+let g:neoformat_enabled_markdown = ['prettier']
+let g:neoformat_markdown_prettier = {
+    \ 'exe': 'prettier',
+    \ 'args': ['--stdin-filepath', '"%:p"', '--print-width', '80', '--prose-wrap', 'always'],
+    \ 'stdin': 1,
+    \ }
+
+" Format on save for markdown
+augroup fmt
+  autocmd!
+  autocmd BufWritePre *.md Neoformat
+augroup END
+
+" Manual formatting command
+nnoremap <leader>fm :Neoformat<CR>
+
 " Colorscheme switching
 nnoremap <leader>c1 :set background=light<CR>:colorscheme PaperColor<CR>
 nnoremap <leader>c2 :set background=light<CR>:colorscheme everforest<CR>
@@ -556,3 +631,182 @@ if claudecode_ok then
 end
 
 EOF
+" Enhanced Markdown Configuration
+" Enable concealing for cleaner markdown display
+let g:vim_markdown_conceal = 1
+let g:vim_markdown_conceal_code_blocks = 0
+let g:vim_markdown_folding_disabled = 0
+let g:vim_markdown_folding_style_pythonic = 1
+let g:vim_markdown_override_foldtext = 0
+let g:vim_markdown_folding_level = 6
+let g:vim_markdown_toc_autofit = 1
+let g:vim_markdown_emphasis_multiline = 1
+let g:vim_markdown_fenced_languages = ['python=python', 'js=javascript', 'rust=rust', 'bash=sh']
+
+" Set conceallevel for markdown files
+autocmd FileType markdown setlocal conceallevel=2
+autocmd FileType markdown setlocal concealcursor=nc
+
+" Treesitter configuration for syntax highlighting
+lua << END
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = { "markdown", "markdown_inline", "python", "javascript", "rust", "bash", "json", "yaml", "toml" },
+  highlight = {
+    enable = true,
+    additional_vim_regex_highlighting = false,
+  },
+  indent = {
+    enable = true,
+  },
+}
+END
+
+" Enhanced colors for markdown headers
+autocmd FileType markdown highlight markdownH1 guifg=#ff6b6b gui=bold
+autocmd FileType markdown highlight markdownH2 guifg=#ffa85a gui=bold
+autocmd FileType markdown highlight markdownH3 guifg=#ffd93d gui=bold
+autocmd FileType markdown highlight markdownH4 guifg=#6bcf7f gui=bold
+autocmd FileType markdown highlight markdownH5 guifg=#4ecdc4 gui=bold
+autocmd FileType markdown highlight markdownH6 guifg=#a8a8ff gui=bold
+
+" Disable swap files
+set noswapfile
+set nobackup
+set nowritebackup
+
+" Fix markdown headers and tables
+" Enable better markdown rendering
+let g:vim_markdown_frontmatter = 1
+let g:vim_markdown_toml_frontmatter = 1
+let g:vim_markdown_json_frontmatter = 1
+let g:vim_markdown_strikethrough = 1
+let g:vim_markdown_new_list_item_indent = 2
+
+" Ensure Treesitter handles markdown properly
+lua << END
+-- Ensure markdown and markdown_inline are properly configured
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function()
+    -- Enable Treesitter highlighting
+    vim.cmd("TSBufEnable highlight")
+    
+    -- Set proper highlights for headers (using Treesitter groups)
+    vim.cmd([[
+      highlight @text.title.1.markdown guifg=#ff6b6b gui=bold guibg=#2a2a2a
+      highlight @text.title.2.markdown guifg=#ffa85a gui=bold guibg=#2a2a2a
+      highlight @text.title.3.markdown guifg=#ffd93d gui=bold
+      highlight @text.title.4.markdown guifg=#6bcf7f gui=bold
+      highlight @text.title.5.markdown guifg=#4ecdc4 gui=bold
+      highlight @text.title.6.markdown guifg=#a8a8ff gui=bold
+      
+      " Alternative header groups (some versions use these)
+      highlight @markup.heading.1.markdown guifg=#ff6b6b gui=bold guibg=#2a2a2a
+      highlight @markup.heading.2.markdown guifg=#ffa85a gui=bold guibg=#2a2a2a
+      highlight @markup.heading.3.markdown guifg=#ffd93d gui=bold
+      highlight @markup.heading.4.markdown guifg=#6bcf7f gui=bold
+      highlight @markup.heading.5.markdown guifg=#4ecdc4 gui=bold
+      highlight @markup.heading.6.markdown guifg=#a8a8ff gui=bold
+      
+      " Table highlighting
+      highlight @text.table.markdown guifg=#b4befe
+      highlight @markup.table.markdown guifg=#b4befe
+      highlight @punctuation.special.markdown guifg=#89dceb
+    ]])
+    
+    -- Ensure conceallevel is set for clean display
+    vim.opt_local.conceallevel = 2
+    vim.opt_local.concealcursor = "nc"
+  end,
+})
+END
+
+" Force reload markdown files to apply settings
+
+" Table mode configuration
+let g:table_mode_corner='|'
+let g:table_mode_border=0
+let g:table_mode_fillchar=' '
+
+" Enable table mode for markdown
+autocmd FileType markdown TableModeEnable
+
+" Better highlighting with your colorscheme
+function! SetMarkdownHighlights()
+  " Headers with darker colors for white background (no background)
+  hi markdownH1 guifg=#d73a49 gui=bold
+  hi markdownH2 guifg=#6f42c1 gui=bold
+  hi markdownH3 guifg=#735c0f gui=bold
+  hi markdownH4 guifg=#28a745 gui=bold
+  hi markdownH5 guifg=#0366d6 gui=bold
+  hi markdownH6 guifg=#ea4a5a gui=bold
+  
+  " Treesitter markdown groups
+  hi @markup.heading.1.markdown guifg=#d73a49 gui=bold
+  hi @markup.heading.2.markdown guifg=#6f42c1 gui=bold
+  hi @markup.heading.3.markdown guifg=#735c0f gui=bold
+  hi @markup.heading.4.markdown guifg=#28a745 gui=bold
+  hi @markup.heading.5.markdown guifg=#0366d6 gui=bold
+  hi @markup.heading.6.markdown guifg=#ea4a5a gui=bold
+  
+  " Legacy Treesitter groups (for compatibility)
+  hi @text.title.1.markdown guifg=#d73a49 gui=bold
+  hi @text.title.2.markdown guifg=#6f42c1 gui=bold
+  hi @text.title.3.markdown guifg=#735c0f gui=bold
+  hi @text.title.4.markdown guifg=#28a745 gui=bold
+  hi @text.title.5.markdown guifg=#0366d6 gui=bold
+  hi @text.title.6.markdown guifg=#ea4a5a gui=bold
+  
+  " Markdown elements with darker colors
+  hi markdownBold guifg=#bf5000 gui=bold
+  hi markdownItalic guifg=#6f42c1 gui=italic
+  hi markdownCode guifg=#032f62 guibg=#f6f8fa
+  hi markdownCodeBlock guifg=#032f62 guibg=#f6f8fa
+  hi markdownLink guifg=#0366d6 gui=underline
+  
+  " Tables with darker colors
+  hi markdownTable guifg=#586069
+  hi markdownTableDelimiter guifg=#959da5
+  
+  " Treesitter table groups
+  hi @text.table.markdown guifg=#586069
+  hi @markup.table.markdown guifg=#586069
+  hi @punctuation.special.markdown guifg=#959da5
+endfunction
+
+" Apply highlights on colorscheme change and file open
+autocmd ColorScheme * call SetMarkdownHighlights()
+autocmd FileType markdown call SetMarkdownHighlights()
+
+" Call it immediately
+call SetMarkdownHighlights()
+
+" Swap : and ; for easier command mode access
+nnoremap ; :
+nnoremap : ;
+vnoremap ; :
+vnoremap : ;
+
+" Ensure markdown highlights persist after reload
+augroup MarkdownHighlights
+  autocmd!
+  " Apply after VimEnter to override any plugin settings
+  autocmd VimEnter * call SetMarkdownHighlights()
+  " Reapply when entering markdown files
+  autocmd BufEnter *.md call SetMarkdownHighlights()
+  " Reapply after sourcing vimrc
+  autocmd SourcePost * call SetMarkdownHighlights()
+  " Apply after any filetype change
+  autocmd FileType markdown call SetMarkdownHighlights()
+augroup END
+
+" Force Treesitter highlighting for markdown
+augroup TreesitterMarkdown
+  autocmd!
+  autocmd FileType markdown TSBufEnable highlight
+  autocmd BufRead *.md TSBufEnable highlight
+  autocmd BufNewFile *.md TSBufEnable highlight
+augroup END
+
+" Delayed application to ensure it overrides everything
+autocmd VimEnter * call timer_start(100, {-> execute('call SetMarkdownHighlights()')})
