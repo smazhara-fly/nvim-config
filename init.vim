@@ -661,13 +661,7 @@ require'nvim-treesitter.configs'.setup {
 }
 END
 
-" Enhanced colors for markdown headers
-autocmd FileType markdown highlight markdownH1 guifg=#ff6b6b gui=bold
-autocmd FileType markdown highlight markdownH2 guifg=#ffa85a gui=bold
-autocmd FileType markdown highlight markdownH3 guifg=#ffd93d gui=bold
-autocmd FileType markdown highlight markdownH4 guifg=#6bcf7f gui=bold
-autocmd FileType markdown highlight markdownH5 guifg=#4ecdc4 gui=bold
-autocmd FileType markdown highlight markdownH6 guifg=#a8a8ff gui=bold
+" Enhanced colors for markdown headers - removed, handled in SetMarkdownHighlights
 
 " Disable swap files
 set noswapfile
@@ -691,28 +685,10 @@ vim.api.nvim_create_autocmd("FileType", {
     -- Enable Treesitter highlighting
     vim.cmd("TSBufEnable highlight")
     
-    -- Set proper highlights for headers (using Treesitter groups)
-    vim.cmd([[
-      highlight @text.title.1.markdown guifg=#ff6b6b gui=bold guibg=#2a2a2a
-      highlight @text.title.2.markdown guifg=#ffa85a gui=bold guibg=#2a2a2a
-      highlight @text.title.3.markdown guifg=#ffd93d gui=bold
-      highlight @text.title.4.markdown guifg=#6bcf7f gui=bold
-      highlight @text.title.5.markdown guifg=#4ecdc4 gui=bold
-      highlight @text.title.6.markdown guifg=#a8a8ff gui=bold
-      
-      " Alternative header groups (some versions use these)
-      highlight @markup.heading.1.markdown guifg=#ff6b6b gui=bold guibg=#2a2a2a
-      highlight @markup.heading.2.markdown guifg=#ffa85a gui=bold guibg=#2a2a2a
-      highlight @markup.heading.3.markdown guifg=#ffd93d gui=bold
-      highlight @markup.heading.4.markdown guifg=#6bcf7f gui=bold
-      highlight @markup.heading.5.markdown guifg=#4ecdc4 gui=bold
-      highlight @markup.heading.6.markdown guifg=#a8a8ff gui=bold
-      
-      " Table highlighting
-      highlight @text.table.markdown guifg=#b4befe
-      highlight @markup.table.markdown guifg=#b4befe
-      highlight @punctuation.special.markdown guifg=#89dceb
-    ]])
+    -- Apply our custom highlights after a delay to override plugin defaults
+    vim.defer_fn(function()
+      vim.cmd("call SetMarkdownHighlights()")
+    end, 100)
     
     -- Ensure conceallevel is set for clean display
     vim.opt_local.conceallevel = 2
@@ -733,6 +709,14 @@ autocmd FileType markdown TableModeEnable
 
 " Better highlighting with your colorscheme
 function! SetMarkdownHighlights()
+  " Clear any existing highlights first
+  hi clear markdownH1
+  hi clear markdownH2
+  hi clear markdownH3
+  hi clear markdownH4
+  hi clear markdownH5
+  hi clear markdownH6
+  
   " Headers with darker colors for white background (no background)
   hi markdownH1 guifg=#d73a49 gui=bold
   hi markdownH2 guifg=#6f42c1 gui=bold
@@ -792,18 +776,31 @@ augroup MarkdownHighlights
   autocmd!
   " Apply after VimEnter to override any plugin settings
   autocmd VimEnter * call SetMarkdownHighlights()
-  " Reapply when entering markdown files with delay to override plugins
-  autocmd BufEnter *.md call timer_start(50, {-> execute('call SetMarkdownHighlights()')})
-  autocmd BufRead *.md call timer_start(50, {-> execute('call SetMarkdownHighlights()')})
-  autocmd BufNewFile *.md call timer_start(50, {-> execute('call SetMarkdownHighlights()')})
+  " Immediate application on file events
+  autocmd BufEnter *.md call SetMarkdownHighlights()
+  autocmd BufRead *.md call SetMarkdownHighlights()
+  autocmd BufNewFile *.md call SetMarkdownHighlights()
+  " Delayed application to override plugins
+  autocmd BufEnter *.md call timer_start(10, {-> execute('call SetMarkdownHighlights()')})
+  autocmd BufRead *.md call timer_start(10, {-> execute('call SetMarkdownHighlights()')})
+  autocmd BufNewFile *.md call timer_start(10, {-> execute('call SetMarkdownHighlights()')})
+  " Multiple delays to ensure it sticks
+  autocmd BufEnter *.md call timer_start(100, {-> execute('call SetMarkdownHighlights()')})
+  autocmd BufEnter *.md call timer_start(200, {-> execute('call SetMarkdownHighlights()')})
   " Reapply after sourcing vimrc
   autocmd SourcePost * call SetMarkdownHighlights()
-  " Apply after any filetype change with delay
-  autocmd FileType markdown call timer_start(100, {-> execute('call SetMarkdownHighlights()')})
+  " Apply after any filetype change
+  autocmd FileType markdown call SetMarkdownHighlights()
+  autocmd FileType markdown call timer_start(50, {-> execute('call SetMarkdownHighlights()')})
+  autocmd FileType markdown call timer_start(150, {-> execute('call SetMarkdownHighlights()')})
   " Apply after syntax is set
+  autocmd Syntax markdown call SetMarkdownHighlights()
   autocmd Syntax markdown call timer_start(100, {-> execute('call SetMarkdownHighlights()')})
   " Apply after buffer is fully loaded
+  autocmd BufWinEnter *.md call SetMarkdownHighlights()
   autocmd BufWinEnter *.md call timer_start(150, {-> execute('call SetMarkdownHighlights()')})
+  " Apply when cursor is held (idle)
+  autocmd CursorHold *.md call SetMarkdownHighlights()
 augroup END
 
 " Force Treesitter highlighting for markdown
