@@ -368,7 +368,8 @@ nnoremap <space>zM zM  " Close all folds
 " Markdown specific settings
 augroup markdown_settings
   autocmd!
-  autocmd FileType markdown setlocal conceallevel=0  " Don't hide markdown syntax (important for tables)
+  autocmd FileType markdown setlocal conceallevel=2  " Hide markdown syntax but show it in tables
+  autocmd FileType markdown setlocal concealcursor=n " Show syntax in insert/visual modes
   autocmd FileType markdown setlocal wrap            " Wrap lines
   autocmd FileType markdown setlocal linebreak       " Break at word boundaries
   autocmd FileType markdown setlocal textwidth=0     " Don't auto-wrap (interferes with tables)
@@ -636,7 +637,7 @@ end
 EOF
 " Enhanced Markdown Configuration
 " Enable concealing for cleaner markdown display
-let g:vim_markdown_conceal = 1
+let g:vim_markdown_conceal = 2
 let g:vim_markdown_conceal_code_blocks = 0
 let g:vim_markdown_folding_disabled = 0
 let g:vim_markdown_folding_style_pythonic = 1
@@ -645,6 +646,11 @@ let g:vim_markdown_folding_level = 6
 let g:vim_markdown_toc_autofit = 1
 let g:vim_markdown_emphasis_multiline = 1
 let g:vim_markdown_fenced_languages = ['python=python', 'js=javascript', 'rust=rust', 'bash=sh']
+let g:vim_markdown_math = 1
+let g:vim_markdown_frontmatter = 1
+let g:vim_markdown_toml_frontmatter = 1
+let g:vim_markdown_json_frontmatter = 1
+let g:vim_markdown_strikethrough = 1
 
 " Set conceallevel for markdown files - removed, handled in markdown_settings augroup
 
@@ -691,9 +697,9 @@ vim.api.nvim_create_autocmd("FileType", {
       vim.cmd("call SetMarkdownHighlights()")
     end, 100)
     
-    -- Ensure conceallevel is set for clean display (0 for tables)
-    vim.opt_local.conceallevel = 0
-    vim.opt_local.concealcursor = ""
+    -- Ensure conceallevel is set for clean display
+    vim.opt_local.conceallevel = 2
+    vim.opt_local.concealcursor = "n"
   end,
 })
 END
