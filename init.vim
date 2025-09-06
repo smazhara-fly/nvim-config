@@ -702,8 +702,8 @@ END
 
 " Table mode configuration
 let g:table_mode_corner='|'
-let g:table_mode_corner_corner='|'
-let g:table_mode_header_fillchar='='
+let g:table_mode_corner_corner='+'
+let g:table_mode_header_fillchar='-'
 let g:table_mode_fillchar=' '
 let g:table_mode_map_prefix = '<leader>t'
 let g:table_mode_toggle_map = 'm'
@@ -713,6 +713,8 @@ let g:table_mode_align_char = '|'
 let g:table_mode_syntax = 1
 let g:table_mode_auto_align = 1
 let g:table_mode_update_time = 500
+let g:table_mode_disable_mappings = 0
+let g:table_mode_disable_tableize_mappings = 0
 
 " Table mode keybindings
 nnoremap <leader>tm :TableModeToggle<CR>
