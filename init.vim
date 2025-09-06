@@ -27,6 +27,11 @@ Plug 'NLKNguyen/papercolor-theme'            " Clean light theme
 Plug 'sainnhe/everforest'                    " Comfortable green theme
 Plug 'catppuccin/nvim', { 'as': 'catppuccin' } " Modern theme with light variant
 
+" Additional vibrant colorschemes for better Rust highlighting
+Plug 'folke/tokyonight.nvim'                 " Popular dark theme with great Rust support
+Plug 'rebelot/kanagawa.nvim'                 " Inspired by Gruvbox but more vibrant
+Plug 'EdenEast/nightfox.nvim'                " Multiple themes with TreeSitter support
+
 call plug#end()
 
 " Auto-install missing plugins on startup
@@ -337,6 +342,13 @@ nnoremap <leader>c3 :set background=light<CR>:colorscheme catppuccin-latte<CR>
 nnoremap <leader>c4 :set background=light<CR>:colorscheme gruvbox<CR>
 nnoremap <leader>cd :set background=dark<CR>:colorscheme gruvbox<CR>
 
+" Vibrant dark themes for better Rust syntax highlighting
+nnoremap <leader>ct :set background=dark<CR>:colorscheme tokyonight-storm<CR>
+nnoremap <leader>cn :set background=dark<CR>:colorscheme tokyonight-night<CR>
+nnoremap <leader>ck :set background=dark<CR>:colorscheme kanagawa<CR>
+nnoremap <leader>cf :set background=dark<CR>:colorscheme nightfox<CR>
+nnoremap <leader>cc :set background=dark<CR>:colorscheme catppuccin-mocha<CR>
+
 " Reload config
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<CR>:echo "Config reloaded"<CR>
 
@@ -368,15 +380,40 @@ lua << EOF
 local status_ok, configs = pcall(require, "nvim-treesitter.configs")
 if status_ok then
   configs.setup {
-    ensure_installed = { "rust", "toml", "lua", "vim" },
+    ensure_installed = { "rust", "toml", "lua", "vim", "markdown", "markdown_inline" },
     highlight = {
       enable = true,
+      additional_vim_regex_highlighting = false,
+      -- Enable enhanced highlighting for Rust
+      disable = function(lang, buf)
+        local max_filesize = 100 * 1024 -- 100 KB
+        local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+        if ok and stats and stats.size > max_filesize then
+          return true
+        end
+      end,
     },
     indent = {
       enable = true,
     },
     fold = {
       enable = true,
+    },
+    -- Enable rainbow parentheses for better bracket matching
+    rainbow = {
+      enable = true,
+      extended_mode = true,
+      max_file_lines = 1000,
+    },
+    -- Enable incremental selection for better code navigation
+    incremental_selection = {
+      enable = true,
+      keymaps = {
+        init_selection = "gnn",
+        node_incremental = "grn",
+        scope_incremental = "grc",
+        node_decremental = "grm",
+      },
     },
   }
 end
