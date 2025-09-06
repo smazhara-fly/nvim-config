@@ -716,13 +716,29 @@ let g:table_mode_update_time = 500
 
 " Table mode keybindings
 nnoremap <leader>tm :TableModeToggle<CR>
-nnoremap <leader>tr :TableModeRealign<CR>
 nnoremap <leader>tt :Tableize<CR>
 vnoremap <leader>tt :Tableize<CR>
-nnoremap <leader>tdd :TableModeRealign<CR>
-nnoremap <leader>tdc :TableModeRealign<CR>
-nnoremap <leader>tic :TableAddColumn<CR>
+nnoremap <leader>ts :TableSort<CR>
+nnoremap <leader>tdd :TableDeleteRow<CR>
 nnoremap <leader>tdc :TableDeleteColumn<CR>
+nnoremap <leader>tic :TableAddColumn<CR>
+
+" Use || to trigger table header separator
+inoremap <Bar><Bar> <Bar><CR><Bar>-<CR><Bar>
+" Use || in normal mode to create a separator
+nnoremap <leader>t<Bar> :normal! o<Bar>-<CR>
+
+" Table realignment/formatting commands
+" Main command to realign tables (this should work)
+nnoremap <leader>tr :TableModeRealign<CR>
+vnoremap <leader>tr :TableModeRealign<CR>
+
+" Alternative using the internal function directly
+nnoremap <leader>ta :call tablemode#table#Realign('.')<CR>
+vnoremap <leader>ta :call tablemode#table#Realign('.')<CR>
+
+" Quick realign with double pipe
+nnoremap <leader>\|\| :TableModeRealign<CR>
 
 " Enable table mode for markdown files automatically
 augroup TableModeActivation
