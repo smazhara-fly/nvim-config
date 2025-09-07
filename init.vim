@@ -450,10 +450,10 @@ nnoremap <leader>cd3 :set background=dark<CR>:colorscheme catppuccin-mocha<CR>
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<CR>:echo "Config reloaded"<CR>
 
 " ClaudeCode keybindings
-nnoremap <leader>ac :ClaudeCode --dangerously-skip-permissions<CR>
+nnoremap <leader>ac :ClaudeCode<CR>
 nnoremap <leader>af :ClaudeCodeFocus<CR>
-nnoremap <leader>ar :ClaudeCode --dangerously-skip-permissions --resume<CR>
-nnoremap <leader>aC :ClaudeCode --dangerously-skip-permissions --continue<CR>
+nnoremap <leader>ar :ClaudeCode --resume<CR>
+nnoremap <leader>aC :ClaudeCode --continue<CR>
 nnoremap <leader>am :ClaudeCodeSelectModel<CR>
 nnoremap <leader>ab :ClaudeCodeAdd %<CR>
 vnoremap <leader>as :ClaudeCodeSend<CR>
@@ -465,9 +465,13 @@ tnoremap <C-w>h <C-\><C-n><C-w>h
 tnoremap <C-w>l <C-\><C-n><C-w>l
 tnoremap <C-h> <C-\><C-n><C-w>h
 
-" Double Ctrl-c to switch to Claude from editor
+" Double Ctrl-c to switch between Claude and editor
+" From editor to Claude (right window)
 nnoremap <C-c><C-c> <cmd>wincmd l<CR>
 inoremap <C-c><C-c> <Esc><cmd>wincmd l<CR>
+
+" From terminal to editor (left window) - terminal mode mapping
+tnoremap <C-c><C-c> <C-\><C-n><cmd>wincmd h<CR>
 
 
 
@@ -718,8 +722,8 @@ if claudecode_ok then
   claudecode.setup({
     -- Use local installation if available, otherwise global
     terminal_cmd = vim.fn.filereadable(vim.fn.expand("~/.claude/local/claude")) == 1 
-      and "~/.claude/local/claude --dangerously-skip-permissions" 
-      or "claude --dangerously-skip-permissions",
+      and "~/.claude/local/claude" 
+      or "claude",
     terminal = {
       snacks_win_opts = {
         position = "right",
@@ -732,34 +736,6 @@ if claudecode_ok then
               vim.cmd("wincmd h")  -- Switch to editor instead of closing
             end,
             mode = "n",
-            desc = "Switch to editor",
-          },
-          -- Press Ctrl-c in normal mode to switch to editor  
-          claude_ctrlc = {
-            "<C-c>",
-            function()
-              vim.cmd("wincmd h")  -- Just switch to left window
-            end,
-            mode = "n",
-            desc = "Switch to editor",
-          },
-          -- Handle double Ctrl-c to not kill the terminal
-          claude_ctrlc_double = {
-            "<C-c><C-c>",
-            function()
-              vim.cmd("wincmd h")  -- Just switch to left window
-            end,
-            mode = "n",
-            desc = "Switch to editor",
-          },
-          -- Also handle in terminal mode
-          claude_ctrlc_term = {
-            "<C-c><C-c>",
-            function()
-              vim.cmd("stopinsert")  -- Exit terminal mode
-              vim.cmd("wincmd h")    -- Switch to editor
-            end,
-            mode = "t",
             desc = "Switch to editor",
           },
         },
