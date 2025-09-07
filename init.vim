@@ -815,11 +815,9 @@ autocmd FileType markdown call SetMarkdownHighlights()
 " Call it immediately
 call SetMarkdownHighlights()
 
-" Swap : and ; for easier command mode access
+" Map ; to : for easier command mode access
 nnoremap ; :
-nnoremap : ;
 vnoremap ; :
-vnoremap : ;
 
 " Ensure markdown highlights persist after reload
 augroup MarkdownHighlights
