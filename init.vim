@@ -12,6 +12,7 @@ Plug 'nvim-telescope/telescope-fzf-native.nvim', {'do': 'make'} " Better perform
 Plug 'nvim-lua/plenary.nvim'                 " Required by telescope
 Plug 'nvim-tree/nvim-tree.lua'               " Modern file explorer
 Plug 'nvim-tree/nvim-web-devicons'           " File icons for nvim-tree
+Plug 'folke/which-key.nvim'                  " Shows keybindings as you type
 Plug 'vim-airline/vim-airline'               " Status line
 Plug 'vim-airline/vim-airline-themes'        " Status line themes
 Plug 'tpope/vim-fugitive'                    " Git integration
@@ -575,6 +576,139 @@ if tree_ok then
       enable = true,
       update_cwd = true,
     },
+  })
+end
+
+-- Which-key configuration
+local whichkey_ok, which_key = pcall(require, "which-key")
+if whichkey_ok then
+  which_key.setup({
+    plugins = {
+      marks = true,
+      registers = true,
+      spelling = {
+        enabled = true,
+        suggestions = 20,
+      },
+    },
+    window = {
+      border = "rounded",
+      position = "bottom",
+      margin = {1, 0, 1, 0},
+      padding = {2, 2, 2, 2},
+    },
+    layout = {
+      height = {min = 4, max = 25},
+      width = {min = 20, max = 50},
+      spacing = 3,
+      align = "left",
+    },
+    show_help = true,
+    triggers = "auto",
+  })
+  
+  -- Register mappings with descriptions
+  which_key.register({
+    ["<leader>"] = {
+      a = {
+        name = "Claude Code",
+        c = "Start Claude Code",
+        f = "Focus Claude",
+        r = "Resume Claude",
+        C = "Continue Claude",
+        m = "Select Model",
+        b = "Add Buffer",
+        s = "Send Selection",
+        a = "Accept Diff",
+        d = "Deny Diff",
+      },
+      c = {
+        name = "Colorschemes",
+        ["1"] = "PaperColor Light",
+        ["2"] = "Everforest Light",
+        ["3"] = "Catppuccin Latte",
+        ["4"] = "Gruvbox Light",
+        d = "Gruvbox Dark",
+        l = {
+          name = "Light Themes",
+          ["1"] = "TokyoNight Day",
+          ["2"] = "Kanagawa Lotus",
+          ["3"] = "Dayfox",
+          ["4"] = "Dawnfox",
+          ["5"] = "Rose Pine Dawn",
+          ["6"] = "GitHub Light",
+          ["7"] = "GitHub Light HC",
+        },
+        d = {
+          name = "Dark Themes",
+          ["1"] = "TokyoNight Storm",
+          ["2"] = "Kanagawa Wave",
+          ["3"] = "Catppuccin Mocha",
+        },
+      },
+      f = {
+        name = "Find/Search",
+        f = "Find Files",
+        g = "Grep String",
+        b = "Find Buffers",
+        h = "Help Tags",
+        s = "LSP Symbols",
+        m = "Format (Neoformat)",
+      },
+      g = {
+        name = "Git/Grep",
+        s = "Grep with Input",
+      },
+      n = {
+        name = "NvimTree",
+        t = "Toggle Tree",
+        f = "Find File in Tree",
+        c = "Collapse Tree",
+      },
+      r = {
+        name = "Rust/Reload",
+        n = "Rename (ALE)",
+        c = "Reload Config",
+        g = "Ripgrep",
+      },
+      t = {
+        name = "Table Mode",
+        m = "Toggle Table Mode",
+        t = "Tableize",
+        s = "Sort Table",
+        r = "Realign Table",
+        a = "Realign (Alt)",
+        ["||"] = "Quick Realign",
+        ["|"] = "Add Separator",
+        d = {
+          name = "Delete",
+          d = "Delete Row",
+          c = "Delete Column",
+        },
+        i = {
+          name = "Insert",
+          c = "Add Column",
+        },
+      },
+      z = {
+        name = "Folding",
+        a = "Toggle Fold",
+        A = "Toggle All Folds",
+        c = "Close Fold",
+        o = "Open Fold",
+        C = "Close All Recursive",
+        O = "Open All Recursive",
+        r = "Reduce Folding",
+        R = "Open All Folds",
+        m = "More Folding",
+        M = "Close All Folds",
+      },
+    },
+    g = {
+      d = "Go to Definition",
+      r = "Find References",
+    },
+    K = "Show Hover",
   })
 end
 
