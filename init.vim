@@ -3,7 +3,8 @@ call plug#begin('~/.config/nvim/plugged')
 
 " Essential Rust plugins
 Plug 'rust-lang/rust.vim'                    " Official Rust plugin
-Plug 'dense-analysis/ale'                    " Async Lint Engine (simpler than LSP)
+Plug 'neovim/nvim-lspconfig'                 " LSP configuration
+Plug 'stevearc/aerial.nvim'                  " Code outline/symbol viewer
 
 " Additional useful plugins
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " Better syntax highlighting
@@ -122,202 +123,34 @@ let g:rust_keep_autopairs_default = 1
 let g:rust_recommended_style = 1
 let g:rust_fold = 1
 
-" ALE Configuration 
-let g:ale_linters = {
-\   'rust': ['cargo', 'analyzer'],
-\}
-let g:ale_fixers = {
-\   'rust': ['rustfmt'],
-\}
-let g:ale_fix_on_save = 1                    " Auto-format on save
-let g:ale_completion_enabled = 0             " Disable ALE completion (causes issues)
-let g:ale_rust_cargo_use_check = 1
-let g:ale_rust_cargo_check_tests = 1
-let g:ale_rust_cargo_check_all_targets = 1
-let g:ale_rust_cargo_default_feature_behavior = 'all'
-let g:ale_rust_cargo_include_features = 1
-let g:ale_rust_analyzer_executable = 'rust-analyzer'
-let g:ale_rust_analyzer_config = {
-\   'rust-analyzer': {
-\     'files': {
-\       'excludeDirs': ['**/.cargo/**', '**/.rustup/**', '**/target/**', '**/.git/**'],
-\     },
-\     'workspace': {
-\       'symbol': {
-\         'search': {
-\           'scope': 'workspace'
-\         }
-\       }
-\     },
-\     'linkedProjects': [getcwd() . '/Cargo.toml'],
-\     'cargo': {
-\       'allFeatures': v:true,
-\     },
-\   }
-\ }
+" LSP keybindings will be set in Lua config below
+" Navigation keybindings (will be mapped to LSP in Lua)
+nnoremap <silent> gd <cmd>lua vim.lsp.buf.definition()<CR>
+nnoremap <silent> gD <cmd>lua vim.lsp.buf.declaration()<CR>
+nnoremap <silent> gr <cmd>lua vim.lsp.buf.references()<CR>
+nnoremap <silent> gi <cmd>lua vim.lsp.buf.implementation()<CR>
+nnoremap <silent> K <cmd>lua vim.lsp.buf.hover()<CR>
+nnoremap <silent> <C-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
+nnoremap <silent> <leader>rn <cmd>lua vim.lsp.buf.rename()<CR>
+nnoremap <silent> <leader>ca <cmd>lua vim.lsp.buf.code_action()<CR>
+nnoremap <silent> <leader>f <cmd>lua vim.lsp.buf.format()<CR>
+nnoremap <silent> [d <cmd>lua vim.diagnostic.goto_prev()<CR>
+nnoremap <silent> ]d <cmd>lua vim.diagnostic.goto_next()<CR>
+nnoremap <silent> <leader>e <cmd>lua vim.diagnostic.open_float()<CR>
+nnoremap <silent> <leader>q <cmd>lua vim.diagnostic.setloclist()<CR>
 
-" ALE floating window settings
-let g:ale_floating_preview = 1
-let g:ale_hover_to_floating_preview = 1
-let g:ale_detail_to_floating_preview = 1
-let g:ale_floating_window_border = ['│', '─', '╭', '╮', '╯', '╰']
-
-" rust-analyzer loading indicator
-let g:rust_analyzer_loading = 1
-function! RustAnalyzerStatus()
-  if &filetype == 'rust'
-    if g:rust_analyzer_loading
-      return ' 🔄 rust-analyzer loading...'
-    else
-      return ' ✅ rust-analyzer ready'
-    endif
-  endif
-  return ''
-endfunction
-
-" Auto-update status when rust-analyzer is ready
-augroup RustAnalyzerStatus
-  autocmd!
-  autocmd BufEnter *.rs call timer_start(1000, 'CheckRustAnalyzer', {'repeat': -1})
-augroup END
-
-function! CheckRustAnalyzer(timer)
-  if &filetype != 'rust' || !g:rust_analyzer_loading
-    call timer_stop(a:timer)
-    return
-  endif
-  
-  " Find a good word to test on - look for function names, types, etc.
-  let l:pos_before = getpos('.')
-  let l:file_before = expand('%:p')
-  let l:test_successful = 0
-  
-  " Save current search
-  let l:old_search = @/
-  
-  try
-    " Look for common Rust patterns to test on
-    let l:patterns = ['fn \w\+', '\w\+::', 'let \w\+', 'struct \w\+', 'enum \w\+']
-    
-    for l:pattern in l:patterns
-      " Search for pattern in current buffer
-      if search(l:pattern, 'nw') > 0
-        " Move to the pattern
-        call search(l:pattern, 'w')
-        " Position cursor on the word part
-        normal! w
-        
-        " Test go-to-definition
-        silent! ALEGoToDefinition
-        
-        let l:pos_after = getpos('.')
-        let l:file_after = expand('%:p')
-        
-        " If we jumped somewhere meaningful, rust-analyzer is working
-        if l:file_after != l:file_before || 
-           \ abs(l:pos_after[1] - l:pos_before[1]) > 5
-          let g:rust_analyzer_loading = 0
-          let l:test_successful = 1
-          echo 'rust-analyzer is now ready!'
-          call timer_stop(a:timer)
-          break
-        endif
-        
-        " Restore position for next test
-        call setpos('.', l:pos_before)
-        if l:file_after != l:file_before
-          execute 'buffer ' . bufnr(l:file_before)
-        endif
-      endif
-    endfor
-    
-  catch
-    " Search failed, still loading
-  finally
-    " Always restore original position and search
-    call setpos('.', l:pos_before)
-    if expand('%:p') != l:file_before
-      execute 'buffer ' . bufnr(l:file_before)
-    endif
-    let @/ = l:old_search
-  endtry
-endfunction
-
-" Navigation keybindings (ALE)
-nnoremap <silent> gd :ALEGoToDefinition<CR>
-nnoremap <silent> gr :ALEFindReferences<CR>
-nnoremap <silent> K :ALEHover<CR>
-nnoremap <silent> <leader>rn :ALERename<CR>
-
-" ALE commands (manual debugging)
-nnoremap <leader>al :ALELint<CR>
-nnoremap <leader>ai :ALEInfo<CR>
-nnoremap <leader>ad :ALEDetail<CR>
-nnoremap <leader>an :ALENext<CR>
-nnoremap <leader>ap :ALEPrevious<CR>
-
-" Simple keybindings for testing
-nnoremap <F2> :ALEInfo<CR>
-nnoremap <F3> :ALEDetail<CR>
-nnoremap <F4> :ALELint<CR>
-
-" Manual commands for rust-analyzer status
-command! RustAnalyzerReset let g:rust_analyzer_loading = 1
-command! RustAnalyzerReady let g:rust_analyzer_loading = 0 | echo 'Marked rust-analyzer as ready'
-command! RustAnalyzerDebug call <SID>debug_rust_analyzer()
-
-function! s:debug_rust_analyzer()
-  echo 'rust-analyzer status: ' . (g:rust_analyzer_loading ? 'loading' : 'ready')
-  echo 'Current word: ' . expand('<cword>')
-  
-  " Test hover
-  try
-    redir => l:hover_output
-    silent! ALEHover  
-    redir END
-    echo 'Hover output: ' . substitute(l:hover_output, '\n', ' | ', 'g')
-  catch
-    echo 'Hover failed'
-  endtry
-  
-  " Test ALE info
-  let l:buffer_info = get(g:ale_buffer_info, bufnr(''), {})
-  let l:loclist = get(l:buffer_info, 'loclist', [])
-  echo 'Diagnostics count: ' . len(l:loclist)
-  for l:item in l:loclist
-    echo 'Linter: ' . get(l:item, 'linter_name', 'unknown')
-  endfor
-endfunction
-
-" Simple documentation lookup
-function! s:show_documentation()
-  let l:word = expand('<cword>')
-  execute 'help ' . l:word
-  if v:shell_error
-    echom 'No documentation found for: ' . l:word
-  endif
-endfunction
-
-" ALE appearance and behavior
-let g:ale_sign_error = '✗'
-let g:ale_sign_warning = '⚠'
-let g:ale_sign_info = 'ℹ'
-let g:ale_sign_style_error = '✗'
-let g:ale_sign_style_warning = '⚠'
-let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
-let g:ale_lint_on_text_changed = 'normal'
-let g:ale_lint_on_insert_leave = 1
-let g:ale_lint_on_save = 1
+" Aerial (code outline) keybindings
+nnoremap <leader>a <cmd>AerialToggle!<CR>
+nnoremap <leader>A <cmd>AerialNavToggle<CR>
+nnoremap [s <cmd>AerialPrev<CR>
+nnoremap ]s <cmd>AerialNext<CR>
+nnoremap <leader>as <cmd>AerialGo<CR>
+nnoremap <leader>at <cmd>AerialTreeToggle<CR>
+nnoremap <leader>ai <cmd>AerialInfo<CR>
 
 " Airline configuration
 let g:airline_theme = 'papercolor'
 let g:airline_powerline_fonts = 1
-let g:airline#extensions#ale#enabled = 1
-function! AirlineRustAnalyzer()
-  return RustAnalyzerStatus()
-endfunction
-call airline#parts#define_function('rust_analyzer', 'AirlineRustAnalyzer')
-let g:airline_section_x = '%{AirlineRustAnalyzer()}%{airline#util#prepend(airline#parts#filetype(),0)}'
 
 " Completion with Tab
 inoremap <silent><expr> <Tab>
@@ -449,16 +282,16 @@ nnoremap <leader>cd3 :set background=dark<CR>:colorscheme catppuccin-mocha<CR>
 " Reload config
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<CR>:echo "Config reloaded"<CR>
 
-" ClaudeCode keybindings
-nnoremap <leader>ac :ClaudeCode<CR>
-nnoremap <leader>af :ClaudeCodeFocus<CR>
-nnoremap <leader>ar :ClaudeCode --resume<CR>
-nnoremap <leader>aC :ClaudeCode --continue<CR>
-nnoremap <leader>am :ClaudeCodeSelectModel<CR>
-nnoremap <leader>ab :ClaudeCodeAdd %<CR>
-vnoremap <leader>as :ClaudeCodeSend<CR>
-nnoremap <leader>aa :ClaudeCodeDiffAccept<CR>
-nnoremap <leader>ad :ClaudeCodeDiffDeny<CR>
+" ClaudeCode keybindings (using 'C' prefix to avoid conflict with Aerial)
+nnoremap <leader>Cc :ClaudeCode<CR>
+nnoremap <leader>Cf :ClaudeCodeFocus<CR>
+nnoremap <leader>Cr :ClaudeCode --resume<CR>
+nnoremap <leader>CC :ClaudeCode --continue<CR>
+nnoremap <leader>Cm :ClaudeCodeSelectModel<CR>
+nnoremap <leader>Cb :ClaudeCodeAdd %<CR>
+vnoremap <leader>Cs :ClaudeCodeSend<CR>
+nnoremap <leader>Ca :ClaudeCodeDiffAccept<CR>
+nnoremap <leader>Cd :ClaudeCodeDiffDeny<CR>
 
 " Terminal mode window navigation
 tnoremap <C-w>h <C-\><C-n><C-w>h
@@ -477,6 +310,194 @@ tnoremap <C-c><C-c> <C-\><C-n><cmd>wincmd h<CR>
 
 " Lua configuration
 lua << EOF
+-- LSP Configuration
+local lspconfig_ok, lspconfig = pcall(require, "lspconfig")
+if lspconfig_ok then
+  -- rust-analyzer setup
+  lspconfig.rust_analyzer.setup({
+    settings = {
+      ["rust-analyzer"] = {
+        cargo = {
+          allFeatures = true,
+          loadOutDirsFromCheck = true,
+          buildScripts = {
+            enable = true,
+          },
+        },
+        checkOnSave = true,
+        check = {
+          command = "clippy",
+          allFeatures = true,
+        },
+        procMacro = {
+          enable = true,
+        },
+        files = {
+          excludeDirs = {
+            ".cargo",
+            ".rustup", 
+            "target",
+            ".git",
+          },
+        },
+        inlayHints = {
+          lifetimeElisionHints = {
+            enable = true,
+            useParameterNames = true,
+          },
+        },
+      },
+    },
+    on_attach = function(client, bufnr)
+      -- Enable completion triggered by <c-x><c-o>
+      vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+      
+      -- Diagnostic config
+      vim.diagnostic.config({
+        virtual_text = true,
+        signs = true,
+        underline = true,
+        update_in_insert = false,
+        severity_sort = true,
+      })
+      
+      -- Set diagnostic signs
+      local signs = { Error = "✗", Warn = "⚠", Hint = "💡", Info = "ℹ" }
+      for type, icon in pairs(signs) do
+        local hl = "DiagnosticSign" .. type
+        vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+      end
+    end,
+    capabilities = vim.lsp.protocol.make_client_capabilities(),
+  })
+end
+
+-- Aerial configuration (code outline)
+local aerial_ok, aerial = pcall(require, "aerial")
+if aerial_ok then
+  aerial.setup({
+    backends = { "lsp", "treesitter", "markdown", "asciidoc", "man" },
+    layout = {
+      max_width = { 40, 0.2 },
+      width = nil,
+      min_width = 20,
+      default_direction = "right",
+      placement = "window",
+    },
+    attach_mode = "window",
+    close_automatic_events = {},
+    
+    -- Disable line numbers in Aerial window
+    show_numbers = false,
+    
+    -- Callback to set window options when Aerial opens
+    on_attach = function(bufnr)
+      -- Disable line numbers for this buffer
+      vim.api.nvim_buf_call(bufnr, function()
+        vim.opt_local.number = false
+        vim.opt_local.relativenumber = false
+        vim.opt_local.signcolumn = "no"
+      end)
+    end,
+    
+    -- Cursor synchronization settings
+    autojump = true,  -- Jump to symbol when navigating in Aerial
+    highlight_on_hover = true,  -- Highlight symbol in code when hovering in Aerial
+    highlight_on_jump = 300,  -- Highlight for 300ms after jumping
+    
+    -- Update Aerial position when cursor moves in code
+    update_events = "TextChanged,InsertLeave,WinEnter,WinLeave,BufWinEnter",
+    
+    -- Follow cursor in code file
+    post_jump_cmd = "normal! zz",  -- Center the line after jumping
+    
+    -- Link cursor position between windows
+    link_folds_to_tree = false,
+    link_tree_to_folds = false,
+    manage_folds = false,
+    
+    -- Show current location in Aerial
+    show_current_context = true,
+    highlight_closest = true,
+    highlight_mode = "split_width",
+    keymaps = {
+      ["?"] = "actions.show_help",
+      ["g?"] = "actions.show_help",
+      ["<CR>"] = "actions.jump",
+      ["<2-LeftMouse>"] = "actions.jump",
+      ["<C-v>"] = "actions.jump_vsplit",
+      ["<C-s>"] = "actions.jump_split",
+      ["p"] = "actions.scroll",
+      ["<C-j>"] = "actions.down_and_scroll",
+      ["<C-k>"] = "actions.up_and_scroll",
+      ["{"] = "actions.prev",
+      ["}"] = "actions.next",
+      ["[["] = "actions.prev_up",
+      ["]]"] = "actions.next_up",
+      ["q"] = "actions.close",
+      ["o"] = "actions.tree_toggle",
+      ["za"] = "actions.tree_toggle",
+      ["O"] = "actions.tree_toggle_recursive",
+      ["zA"] = "actions.tree_toggle_recursive",
+      ["l"] = "actions.tree_open",
+      ["zo"] = "actions.tree_open",
+      ["L"] = "actions.tree_open_recursive",
+      ["zO"] = "actions.tree_open_recursive",
+      ["h"] = "actions.tree_close",
+      ["zc"] = "actions.tree_close",
+      ["H"] = "actions.tree_close_recursive",
+      ["zC"] = "actions.tree_close_recursive",
+      ["zr"] = "actions.tree_increase_fold_level",
+      ["zR"] = "actions.tree_open_all",
+      ["zm"] = "actions.tree_decrease_fold_level",
+      ["zM"] = "actions.tree_close_all",
+      ["zx"] = "actions.tree_sync_folds",
+      ["zX"] = "actions.tree_sync_folds",
+    },
+    filter_kind = false,
+    icons = {
+      -- Rust-specific icons with better visibility
+      Module = " 📦 ",
+      Namespace = " 🗂 ",
+      Package = " 📦 ",
+      Class = " 🏛 ",
+      Struct = " 🏗 ",
+      Enum = " 📋 ",
+      Interface = " 🔌 ",
+      Function = " 🔧 ",
+      Method = " 🔨 ",
+      Constructor = " 🏗 ",
+      Field = " 🏷 ",
+      Variable = " 📝 ",
+      Constant = " 🔒 ",
+      String = " 💬 ",
+      Number = " 🔢 ",
+      Boolean = " ✓ ",
+      Array = " 📚 ",
+      Object = " 📦 ",
+      Key = " 🔑 ",
+      Null = " ∅ ",
+      EnumMember = " 📍 ",
+      Property = " 📌 ",
+      Event = " ⚡ ",
+      Operator = " ⚙ ",
+      TypeParameter = " 📐 ",
+      File = " 📄 ",
+      Folder = " 📁 ",
+      Trait = " 🔗 ",
+      Impl = " 🔧 ",
+      Macro = " ⚡ ",
+    },
+    show_guides = true,
+    guides = {
+      mid_item = "├─",
+      last_item = "└─",
+      nested_top = "│ ",
+      whitespace = "  ",
+    },
+  })
+end
+
 -- Treesitter configuration
 local status_ok, configs = pcall(require, "nvim-treesitter.configs")
 if status_ok then
@@ -614,7 +635,9 @@ if whichkey_ok then
   -- Register mappings with descriptions
   which_key.register({
     ["<leader>"] = {
-      a = {
+      a = "Toggle Aerial (code outline)",
+      A = "Toggle Aerial navigation",
+      C = {
         name = "Claude Code",
         c = "Start Claude Code",
         f = "Focus Claude",
@@ -710,9 +733,19 @@ if whichkey_ok then
     },
     g = {
       d = "Go to Definition",
+      D = "Go to Declaration", 
       r = "Find References",
+      i = "Go to Implementation",
     },
     K = "Show Hover",
+    ["["] = {
+      d = "Previous Diagnostic",
+      s = "Previous Symbol (Aerial)",
+    },
+    ["]"] = {
+      d = "Next Diagnostic", 
+      s = "Next Symbol (Aerial)",
+    },
   })
 end
 
@@ -924,6 +957,104 @@ autocmd FileType markdown call SetMarkdownHighlights()
 
 " Call it immediately
 call SetMarkdownHighlights()
+
+" Aerial highlighting - colorful symbols for better visibility
+function! SetAerialHighlights()
+  " Symbol type highlights with vibrant colors
+  hi AerialClass guifg=#6f42c1 gui=bold
+  hi AerialClassIcon guifg=#6f42c1 gui=bold
+  hi AerialStruct guifg=#0366d6 gui=bold
+  hi AerialStructIcon guifg=#0366d6 gui=bold
+  hi AerialEnum guifg=#28a745 gui=bold
+  hi AerialEnumIcon guifg=#28a745 gui=bold
+  hi AerialInterface guifg=#ea4a5a gui=bold
+  hi AerialInterfaceIcon guifg=#ea4a5a gui=bold
+  hi AerialFunction guifg=#d73a49 gui=bold
+  hi AerialFunctionIcon guifg=#d73a49 gui=bold
+  hi AerialMethod guifg=#e36209 gui=bold
+  hi AerialMethodIcon guifg=#e36209 gui=bold
+  hi AerialConstructor guifg=#6f42c1 gui=bold
+  hi AerialConstructorIcon guifg=#6f42c1 gui=bold
+  hi AerialField guifg=#735c0f gui=bold
+  hi AerialFieldIcon guifg=#735c0f gui=bold
+  hi AerialProperty guifg=#735c0f gui=bold
+  hi AerialPropertyIcon guifg=#735c0f gui=bold
+  hi AerialEvent guifg=#b08800 gui=bold
+  hi AerialEventIcon guifg=#b08800 gui=bold
+  hi AerialOperator guifg=#032f62 gui=bold
+  hi AerialOperatorIcon guifg=#032f62 gui=bold
+  hi AerialTypeParameter guifg=#b08800 gui=italic
+  hi AerialTypeParameterIcon guifg=#b08800 gui=italic
+  hi AerialKey guifg=#005cc5 gui=bold
+  hi AerialKeyIcon guifg=#005cc5 gui=bold
+  hi AerialVariable guifg=#032f62 gui=bold
+  hi AerialVariableIcon guifg=#032f62 gui=bold
+  hi AerialConstant guifg=#005cc5 gui=bold
+  hi AerialConstantIcon guifg=#005cc5 gui=bold
+  hi AerialString guifg=#032f62 gui=italic
+  hi AerialStringIcon guifg=#032f62 gui=italic
+  hi AerialNumber guifg=#005cc5 gui=bold
+  hi AerialNumberIcon guifg=#005cc5 gui=bold
+  hi AerialBoolean guifg=#005cc5 gui=bold
+  hi AerialBooleanIcon guifg=#005cc5 gui=bold
+  hi AerialArray guifg=#e36209 gui=bold
+  hi AerialArrayIcon guifg=#e36209 gui=bold
+  hi AerialObject guifg=#6f42c1 gui=bold
+  hi AerialObjectIcon guifg=#6f42c1 gui=bold
+  hi AerialModule guifg=#6f42c1 gui=bold
+  hi AerialModuleIcon guifg=#6f42c1 gui=bold
+  hi AerialNamespace guifg=#6f42c1 gui=bold
+  hi AerialNamespaceIcon guifg=#6f42c1 gui=bold
+  hi AerialPackage guifg=#6f42c1 gui=bold
+  hi AerialPackageIcon guifg=#6f42c1 gui=bold
+  hi AerialFile guifg=#586069 gui=bold
+  hi AerialFileIcon guifg=#586069 gui=bold
+  hi AerialEnumMember guifg=#22863a gui=italic
+  hi AerialEnumMemberIcon guifg=#22863a gui=italic
+  hi AerialNull guifg=#959da5 gui=italic
+  hi AerialNullIcon guifg=#959da5 gui=italic
+  
+  " Guide lines and tree structure
+  hi AerialGuide guifg=#959da5
+  hi AerialLine guifg=#d73a49 gui=bold
+  
+  " Special Rust-specific highlights
+  hi link AerialImpl AerialInterface
+  hi link AerialImplIcon AerialInterfaceIcon
+  hi link AerialTrait AerialInterface
+  hi link AerialTraitIcon AerialInterfaceIcon
+  hi link AerialMacro AerialFunction
+  hi link AerialMacroIcon AerialFunctionIcon
+  
+  " Aerial window background and borders
+  hi AerialNormal guibg=#fafbfc
+  hi AerialBorder guifg=#d1d5da gui=bold
+  hi AerialWinSeparator guifg=#d1d5da gui=bold
+  
+  " Line highlighting in Aerial window
+  hi AerialLineNC guibg=#f6f8fa
+  hi AerialCursorLine guibg=#fff5b1 gui=bold
+endfunction
+
+" Apply Aerial highlights
+autocmd ColorScheme * call SetAerialHighlights()
+autocmd VimEnter * call SetAerialHighlights()
+call SetAerialHighlights()
+
+" Auto-sync Aerial cursor with main buffer cursor
+augroup AerialSync
+  autocmd!
+  " Update Aerial position when cursor moves
+  autocmd CursorMoved * silent! lua require('aerial').sync_position()
+  autocmd CursorMovedI * silent! lua require('aerial').sync_position()
+  " Update when entering a window
+  autocmd BufWinEnter * silent! lua require('aerial').sync_position()
+  autocmd WinEnter * silent! lua require('aerial').sync_position()
+  " Disable line numbers in Aerial window
+  autocmd FileType aerial setlocal nonumber norelativenumber signcolumn=no
+  autocmd BufWinEnter aerial://* setlocal nonumber norelativenumber signcolumn=no
+  autocmd WinEnter aerial://* setlocal nonumber norelativenumber signcolumn=no
+augroup END
 
 " Map ; to : for easier command mode access
 nnoremap ; :
