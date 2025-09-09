@@ -392,11 +392,13 @@ if aerial_ok then
     
     -- Callback to set window options when Aerial opens
     on_attach = function(bufnr)
-      -- Disable line numbers for this buffer
+      -- Only disable line numbers if this is actually the aerial buffer
       vim.api.nvim_buf_call(bufnr, function()
-        vim.opt_local.number = false
-        vim.opt_local.relativenumber = false
-        vim.opt_local.signcolumn = "no"
+        if vim.bo.filetype == 'aerial' then
+          vim.opt_local.number = false
+          vim.opt_local.relativenumber = false
+          vim.opt_local.signcolumn = "no"
+        end
       end)
     end,
     
@@ -1050,10 +1052,9 @@ augroup AerialSync
   " Update when entering a window
   autocmd BufWinEnter * silent! lua require('aerial').sync_position()
   autocmd WinEnter * silent! lua require('aerial').sync_position()
-  " Disable line numbers in Aerial window
-  autocmd FileType aerial setlocal nonumber norelativenumber signcolumn=no
-  autocmd BufWinEnter aerial://* setlocal nonumber norelativenumber signcolumn=no
-  autocmd WinEnter aerial://* setlocal nonumber norelativenumber signcolumn=no
+  " Disable line numbers ONLY in Aerial windows
+  autocmd BufWinEnter * if &filetype == 'aerial' | setlocal nonumber norelativenumber signcolumn=no | endif
+  autocmd WinEnter * if &filetype == 'aerial' | setlocal nonumber norelativenumber signcolumn=no | endif
 augroup END
 
 " Map ; to : for easier command mode access
