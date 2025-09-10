@@ -121,7 +121,7 @@ let g:rust_clip_command = 'xclip -selection clipboard'
 " Enhanced semantic highlighting for Rust
 let g:rust_keep_autopairs_default = 1
 let g:rust_recommended_style = 1
-let g:rust_fold = 1
+let g:rust_fold = 0
 
 " LSP keybindings will be set in Lua config below
 " Navigation keybindings (will be mapped to LSP in Lua)
@@ -187,17 +187,6 @@ command! RgInteractive lua vim.ui.input({prompt = 'Search: '}, function(input) i
 command! -nargs=1 Tgrep lua require('telescope.builtin').grep_string({search = <q-args>})
 nnoremap <leader>gs :Tgrep<Space>
 
-" Folding keybindings
-nnoremap <space>za za  " Toggle fold under cursor
-nnoremap <space>zA zA  " Toggle all folds recursively under cursor
-nnoremap <space>zc zc  " Close fold under cursor
-nnoremap <space>zo zo  " Open fold under cursor
-nnoremap <space>zC zC  " Close all folds recursively under cursor
-nnoremap <space>zO zO  " Open all folds recursively under cursor
-nnoremap <space>zr zr  " Reduce folding level by one
-nnoremap <space>zR zR  " Open all folds
-nnoremap <space>zm zm  " Increase folding level by one
-nnoremap <space>zM zM  " Close all folds
 
 " Markdown specific settings
 augroup markdown_settings
@@ -213,6 +202,14 @@ augroup markdown_settings
   " Use markdown folding for markdown files
   autocmd FileType markdown setlocal foldmethod=expr
   autocmd FileType markdown setlocal foldexpr=MarkdownFold()
+augroup END
+
+" Rust specific folding settings
+augroup rust_folding
+  autocmd!
+  autocmd FileType rust setlocal foldmethod=expr
+  autocmd FileType rust setlocal foldexpr=nvim_treesitter#foldexpr()
+  autocmd FileType rust setlocal foldlevelstart=99
 augroup END
 
 " Markdown folding expression
@@ -718,19 +715,6 @@ if whichkey_ok then
           name = "Insert",
           c = "Add Column",
         },
-      },
-      z = {
-        name = "Folding",
-        a = "Toggle Fold",
-        A = "Toggle All Folds",
-        c = "Close Fold",
-        o = "Open Fold",
-        C = "Close All Recursive",
-        O = "Open All Recursive",
-        r = "Reduce Folding",
-        R = "Open All Folds",
-        m = "More Folding",
-        M = "Close All Folds",
       },
     },
     g = {
