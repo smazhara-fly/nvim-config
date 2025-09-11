@@ -24,7 +24,6 @@ Plug 'coder/claudecode.nvim'                 " Claude Code in Neovim
 Plug 'folke/snacks.nvim'                     " Required for claudecode.nvim
 
 " Markdown plugins
-Plug 'preservim/vim-markdown'                " Markdown folding and syntax
 Plug 'sbdchd/neoformat'                      " Formatting tool for prettier
 
 " Light colorschemes
@@ -43,6 +42,10 @@ Plug 'projekt0n/github-nvim-theme'           " GitHub's official light theme
 " Table formatting and alignment
 Plug 'dhruvasagar/vim-table-mode'            " Better table support
 Plug 'gabrielelana/vim-markdown'             " Alternative markdown with better rendering
+
+" Systemd syntax highlighting
+Plug 'chr4/nginx.vim'                        " Nginx syntax (often used with systemd)
+Plug 'wgwoods/vim-systemd-syntax'            " Systemd unit file syntax
 call plug#end()
 
 " Auto-install missing plugins on startup
@@ -278,6 +281,23 @@ nnoremap <leader>cd3 :set background=dark<CR>:colorscheme catppuccin-mocha<CR>
 
 " Reload config
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<CR>:echo "Config reloaded"<CR>
+
+" Systemd file type detection
+augroup systemd_filetype
+  autocmd!
+  autocmd BufRead,BufNewFile *.service set filetype=systemd
+  autocmd BufRead,BufNewFile *.timer set filetype=systemd
+  autocmd BufRead,BufNewFile *.mount set filetype=systemd
+  autocmd BufRead,BufNewFile *.automount set filetype=systemd
+  autocmd BufRead,BufNewFile *.swap set filetype=systemd
+  autocmd BufRead,BufNewFile *.target set filetype=systemd
+  autocmd BufRead,BufNewFile *.path set filetype=systemd
+  autocmd BufRead,BufNewFile *.socket set filetype=systemd
+  autocmd BufRead,BufNewFile *.device set filetype=systemd
+  autocmd BufRead,BufNewFile *.scope set filetype=systemd
+  autocmd BufRead,BufNewFile *.slice set filetype=systemd
+  autocmd BufRead,BufNewFile /etc/systemd/* set filetype=systemd
+augroup END
 
 " ClaudeCode keybindings (using 'C' prefix to avoid conflict with Aerial)
 nnoremap <leader>Cc :ClaudeCode<CR>
