@@ -66,7 +66,7 @@ set smartindent                 " Smart indentation
 set autoindent                  " Auto indentation
 set cursorline                  " Highlight current line
 set mouse=a                     " Enable mouse support
-set clipboard=unnamedplus       " Use system clipboard
+set clipboard=unnamedplus       " Use system clipboard (will be overridden for SSH)
 set termguicolors               " Enable true colors
 set signcolumn=yes              " Always show sign column
 set updatetime=300              " Faster completion
@@ -324,6 +324,53 @@ inoremap <C-c><C-c> <Esc><cmd>wincmd l<CR>
 tnoremap <C-c><C-c> <C-\><C-n><cmd>wincmd h<CR>
 
 
+
+" OSC 52 Clipboard Configuration for SSH
+" This enables clipboard support when running Neovim on a remote server
+if !empty($SSH_TTY)
+  " We're in an SSH session, use OSC 52 for clipboard
+  let g:clipboard = {
+    \   'name': 'OSC 52',
+    \   'copy': {
+    \      '+': {lines, regtype -> system('printf "\033]52;c;%s\a" "$(printf "%s" "' . join(lines, "\n") . '" | base64 -w0)"')},
+    \      '*': {lines, regtype -> system('printf "\033]52;c;%s\a" "$(printf "%s" "' . join(lines, "\n") . '" | base64 -w0)"')},
+    \    },
+    \   'paste': {
+    \      '+': {-> []},
+    \      '*': {-> []},
+    \   },
+    \ }
+  
+  " Alternative Lua-based OSC 52 implementation for better performance
+  lua << OSCLUA
+  -- OSC 52 clipboard provider for Neovim over SSH
+  local function copy(lines, _)
+    local content = table.concat(lines, '\n')
+    local base64 = vim.fn.system('base64 -w0', content)
+    base64 = base64:gsub('\n', '')
+    local osc52 = string.format('\027]52;c;%s\a', base64)
+    
+    -- Send to terminal
+    io.stdout:write(osc52)
+    io.stdout:flush()
+  end
+
+  -- Only override if we're in SSH session
+  if vim.env.SSH_TTY and vim.env.SSH_TTY ~= '' then
+    vim.g.clipboard = {
+      name = 'OSC52',
+      copy = {
+        ['+'] = copy,
+        ['*'] = copy,
+      },
+      paste = {
+        ['+'] = function() return {} end,
+        ['*'] = function() return {} end,
+      },
+    }
+  end
+OSCLUA
+endif
 
 " Lua configuration
 lua << EOF
