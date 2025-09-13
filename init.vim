@@ -1,3 +1,6 @@
+" Disable NERDCommenter default mappings before plugin loads
+let g:NERDCreateDefaultMappings = 0
+
 " Vim-Plug plugin manager
 call plug#begin('~/.config/nvim/plugged')
 
@@ -178,7 +181,7 @@ nnoremap <leader>ft <cmd>Telescope builtin<cr>
 
 " Alternative grep commands (working fallbacks)
 nnoremap <leader>rg :Rg<Space>
-nnoremap <leader>R :RgInteractive<CR>
+" Removed <leader>R mapping - was RgInteractive
 
 " Debug telescope command
 command! TelescopeDebug lua print('rg test:'); print(vim.fn.system('rg --version')); print('Telescope config:'); print(vim.inspect(require('telescope.config').values.vimgrep_arguments))
@@ -280,8 +283,43 @@ augroup systemd_filetype
   autocmd BufRead,BufNewFile /etc/systemd/* set filetype=systemd
 augroup END
 
-" ClaudeCode keybindings
-nnoremap <leader>cc :ClaudeCode<CR>
+" Unmap unwanted leader mappings
+silent! nunmap <leader>e
+silent! nunmap <leader>q
+silent! nunmap <leader>g
+
+" Explicitly unmap any NERDCommenter leader mappings
+silent! nunmap <leader>cc
+silent! nunmap <leader>cn
+silent! nunmap <leader>c<space>
+silent! nunmap <leader>cm
+silent! nunmap <leader>ci
+silent! nunmap <leader>cs
+silent! nunmap <leader>cy
+silent! nunmap <leader>c$
+silent! nunmap <leader>cA
+silent! nunmap <leader>ca
+silent! nunmap <leader>cl
+silent! nunmap <leader>cb
+silent! nunmap <leader>cu
+silent! vunmap <leader>cc
+silent! vunmap <leader>cn
+silent! vunmap <leader>cm
+silent! vunmap <leader>ci
+silent! vunmap <leader>cs
+silent! vunmap <leader>cy
+silent! vunmap <leader>c$
+silent! vunmap <leader>cA
+silent! vunmap <leader>ca
+silent! vunmap <leader>cl
+silent! vunmap <leader>cb
+silent! vunmap <leader>cu
+
+" ClaudeCode keybindings - all under <leader>c prefix
+" Open/focus Claude
+nnoremap <leader>co :ClaudeCodeFocus<CR>
+" Close Claude window from anywhere (keeps session running)
+nnoremap <leader>cc :lua for _, win in ipairs(vim.api.nvim_list_wins()) do local buf = vim.api.nvim_win_get_buf(win); if vim.api.nvim_buf_get_name(buf):match("claude") or vim.api.nvim_buf_get_name(buf):match("ClaudeCode") then vim.api.nvim_win_close(win, false); break end end<CR>
 nnoremap <leader>cf :ClaudeCodeFocus<CR>
 nnoremap <leader>cr :ClaudeCode --resume<CR>
 nnoremap <leader>cC :ClaudeCode --continue<CR>
@@ -290,6 +328,40 @@ nnoremap <leader>cb :ClaudeCodeAdd %<CR>
 vnoremap <leader>cs :ClaudeCodeSend<CR>
 nnoremap <leader>ca :ClaudeCodeDiffAccept<CR>
 nnoremap <leader>cd :ClaudeCodeDiffDeny<CR>
+
+" NERDCommenter mappings - using gc prefix (no leader key)
+" gc = comment toggle, gu = uncomment
+nmap gcc <Plug>NERDCommenterToggle
+vmap gc <Plug>NERDCommenterToggle
+nmap gcl <Plug>NERDCommenterAlignLeft
+nmap gca <Plug>NERDCommenterAppend
+nmap gcy <Plug>NERDCommenterYank
+nmap gcs <Plug>NERDCommenterSexy
+nmap gcu <Plug>NERDCommenterUncomment
+nmap gcn <Plug>NERDCommenterNested
+nmap gcm <Plug>NERDCommenterMinimal
+nmap gci <Plug>NERDCommenterInvert
+nmap gc$ <Plug>NERDCommenterToEOL
+
+" Find keymaps - search through all mappings
+nnoremap <leader>fk :Telescope keymaps<CR>
+
+" Visual differentiation for terminal windows (Claude Code)
+" Make inactive terminal windows dimmer without cursor manipulation
+augroup TerminalVisibility
+  autocmd!
+  " Make inactive terminal windows dimmer for better visibility
+  autocmd WinEnter * if &buftype == 'terminal' | setlocal winhighlight=Normal:Normal | endif
+  autocmd WinLeave * if &buftype == 'terminal' | setlocal winhighlight=Normal:NonText | endif
+augroup END
+
+" Visual indicators for active window (including terminal splits)
+set cursorline                  " Highlight current line in active window
+augroup CursorLineOnlyInActiveWindow
+  autocmd!
+  autocmd VimEnter,WinEnter,BufWinEnter * setlocal cursorline
+  autocmd WinLeave * setlocal nocursorline
+augroup END
 
 " Terminal mode window navigation
 tnoremap <C-w>h <C-\><C-n><C-w>h
