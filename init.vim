@@ -174,6 +174,7 @@ nnoremap <leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <leader>fb <cmd>Telescope buffers<cr>
 nnoremap <leader>fh <cmd>Telescope help_tags<cr>
 nnoremap <leader>fs <cmd>Telescope lsp_dynamic_workspace_symbols<cr>
+nnoremap <leader>ft <cmd>Telescope builtin<cr>
 
 " Alternative grep commands (working fallbacks)
 nnoremap <leader>rg :Rg<Space>
@@ -702,6 +703,7 @@ if whichkey_ok then
         b = "Find Buffers",
         h = "Help Tags",
         s = "LSP Symbols",
+        t = "Telescope Commands",
         m = "Format (Neoformat)",
       },
       g = {
