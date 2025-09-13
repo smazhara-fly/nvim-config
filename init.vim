@@ -258,26 +258,6 @@ augroup END
 " Manual formatting command
 nnoremap <leader>fm :Neoformat<CR>
 
-" Colorscheme switching
-nnoremap <leader>c1 :set background=light<CR>:colorscheme PaperColor<CR>
-nnoremap <leader>c2 :set background=light<CR>:colorscheme everforest<CR>
-nnoremap <leader>c3 :set background=light<CR>:colorscheme catppuccin-latte<CR>
-nnoremap <leader>c4 :set background=light<CR>:colorscheme gruvbox<CR>
-nnoremap <leader>cd :set background=dark<CR>:colorscheme gruvbox<CR>
-
-" Vibrant light themes for better Rust syntax highlighting
-nnoremap <leader>cl1 :set background=light<CR>:colorscheme tokyonight-day<CR>
-nnoremap <leader>cl2 :set background=light<CR>:colorscheme kanagawa-lotus<CR>
-nnoremap <leader>cl3 :set background=light<CR>:colorscheme dayfox<CR>
-nnoremap <leader>cl4 :set background=light<CR>:colorscheme dawnfox<CR>
-nnoremap <leader>cl5 :set background=light<CR>:colorscheme rose-pine-dawn<CR>
-nnoremap <leader>cl6 :set background=light<CR>:colorscheme github_light<CR>
-nnoremap <leader>cl7 :set background=light<CR>:colorscheme github_light_high_contrast<CR>
-
-" Dark themes (if you want to try them)
-nnoremap <leader>cd1 :set background=dark<CR>:colorscheme tokyonight-storm<CR>
-nnoremap <leader>cd2 :set background=dark<CR>:colorscheme kanagawa-wave<CR>
-nnoremap <leader>cd3 :set background=dark<CR>:colorscheme catppuccin-mocha<CR>
 
 " Reload config
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<CR>:echo "Config reloaded"<CR>
@@ -299,16 +279,16 @@ augroup systemd_filetype
   autocmd BufRead,BufNewFile /etc/systemd/* set filetype=systemd
 augroup END
 
-" ClaudeCode keybindings (using 'C' prefix to avoid conflict with Aerial)
-nnoremap <leader>Cc :ClaudeCode<CR>
-nnoremap <leader>Cf :ClaudeCodeFocus<CR>
-nnoremap <leader>Cr :ClaudeCode --resume<CR>
-nnoremap <leader>CC :ClaudeCode --continue<CR>
-nnoremap <leader>Cm :ClaudeCodeSelectModel<CR>
-nnoremap <leader>Cb :ClaudeCodeAdd %<CR>
-vnoremap <leader>Cs :ClaudeCodeSend<CR>
-nnoremap <leader>Ca :ClaudeCodeDiffAccept<CR>
-nnoremap <leader>Cd :ClaudeCodeDiffDeny<CR>
+" ClaudeCode keybindings
+nnoremap <leader>cc :ClaudeCode<CR>
+nnoremap <leader>cf :ClaudeCodeFocus<CR>
+nnoremap <leader>cr :ClaudeCode --resume<CR>
+nnoremap <leader>cC :ClaudeCode --continue<CR>
+nnoremap <leader>cm :ClaudeCodeSelectModel<CR>
+nnoremap <leader>cb :ClaudeCodeAdd %<CR>
+vnoremap <leader>cs :ClaudeCodeSend<CR>
+nnoremap <leader>ca :ClaudeCodeDiffAccept<CR>
+nnoremap <leader>cd :ClaudeCodeDiffDeny<CR>
 
 " Terminal mode window navigation
 tnoremap <C-w>h <C-\><C-n><C-w>h
@@ -703,7 +683,7 @@ if whichkey_ok then
     ["<leader>"] = {
       a = "Toggle Aerial (code outline)",
       A = "Toggle Aerial navigation",
-      C = {
+      c = {
         name = "Claude Code",
         c = "Start Claude Code",
         f = "Focus Claude",
@@ -714,30 +694,6 @@ if whichkey_ok then
         s = "Send Selection",
         a = "Accept Diff",
         d = "Deny Diff",
-      },
-      c = {
-        name = "Colorschemes",
-        ["1"] = "PaperColor Light",
-        ["2"] = "Everforest Light",
-        ["3"] = "Catppuccin Latte",
-        ["4"] = "Gruvbox Light",
-        d = "Gruvbox Dark",
-        l = {
-          name = "Light Themes",
-          ["1"] = "TokyoNight Day",
-          ["2"] = "Kanagawa Lotus",
-          ["3"] = "Dayfox",
-          ["4"] = "Dawnfox",
-          ["5"] = "Rose Pine Dawn",
-          ["6"] = "GitHub Light",
-          ["7"] = "GitHub Light HC",
-        },
-        d = {
-          name = "Dark Themes",
-          ["1"] = "TokyoNight Storm",
-          ["2"] = "Kanagawa Wave",
-          ["3"] = "Catppuccin Mocha",
-        },
       },
       f = {
         name = "Find/Search",
