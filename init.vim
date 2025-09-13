@@ -598,18 +598,6 @@ if telescope_ok then
         ".rustup/", 
         "target/",
       },
-      mappings = {
-        i = {
-          -- Move between selections with Ctrl-j/k in insert mode
-          ["<C-j>"] = require('telescope.actions').move_selection_next,
-          ["<C-k>"] = require('telescope.actions').move_selection_previous,
-        },
-        n = {
-          -- Also add for normal mode
-          ["<C-j>"] = require('telescope.actions').move_selection_next,
-          ["<C-k>"] = require('telescope.actions').move_selection_previous,
-        },
-      },
     },
   })
   
