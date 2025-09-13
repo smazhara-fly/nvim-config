@@ -806,10 +806,10 @@ end
 local claudecode_ok, claudecode = pcall(require, "claudecode")
 if claudecode_ok then
   claudecode.setup({
-    -- Use local installation if available, otherwise global
+    -- Use local installation if available, otherwise global, with --dangerously-skip-permissions flag
     terminal_cmd = vim.fn.filereadable(vim.fn.expand("~/.claude/local/claude")) == 1 
-      and "~/.claude/local/claude" 
-      or "claude",
+      and "~/.claude/local/claude --dangerously-skip-permissions" 
+      or "claude --dangerously-skip-permissions",
     terminal = {
       snacks_win_opts = {
         position = "right",
